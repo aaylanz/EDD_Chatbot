@@ -29,15 +29,17 @@ export const EmployeeInfoDialog: FC<EmployeeInfoDialogProps> = ({
   const nameInputRef = useRef<HTMLInputElement>(null);
   const employeeIdInputRef = useRef<HTMLInputElement>(null);
   const callbackNumberInputRef = useRef<HTMLInputElement>(null);
-  const [errors, setErrors] = useState({ name: false, employeeId: false, callbackNumber: false });
+  const [errors, setErrors] = useState({
+    name: false,
+    employeeId: false,
+    callbackNumber: false,
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const name = nameInputRef.current?.value?.trim() || '';
     const employeeId = employeeIdInputRef.current?.value?.trim() || '';
     const callbackNumber = callbackNumberInputRef.current?.value?.trim() || '';
-
-    // Validate inputs
     const newErrors = {
       name: name === '',
       employeeId: employeeId === '',
@@ -103,13 +105,22 @@ export const EmployeeInfoDialog: FC<EmployeeInfoDialogProps> = ({
               fullWidth
               type="tel"
               error={errors.callbackNumber}
-              helperText={errors.callbackNumber ? 'Callback number is required' : ''}
+              helperText={
+                errors.callbackNumber ? 'Callback number is required' : ''
+              }
               onChange={() =>
                 setErrors((prev) => ({ ...prev, callbackNumber: false }))
               }
             />
 
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 2,
+                justifyContent: 'flex-end',
+                mt: 2,
+              }}
+            >
               <Button onClick={handleCancel} color="inherit">
                 Cancel
               </Button>

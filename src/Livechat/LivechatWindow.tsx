@@ -223,6 +223,7 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
   const handleAgentTypingStartedEvent = useCallback(
     (event: CustomEvent<ChatEventData>) => {
       if (isAgentTypingStartedEvent(event.detail)) {
+        console.log('Agent started typing');
         setAgentTyping(true);
       }
     },
@@ -232,6 +233,7 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
   const handleAgentTypingEndedEvent = useCallback(
     (event: CustomEvent<ChatEventData>) => {
       if (isAgentTypingEndedEvent(event.detail)) {
+        console.log('Agent stopped typing');
         setAgentTyping(false);
       }
     },

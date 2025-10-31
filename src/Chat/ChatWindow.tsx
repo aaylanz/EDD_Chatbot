@@ -29,7 +29,10 @@ import { Header } from './Header/Header';
 import { ChatOptions, ChatOption } from './Options/ChatOptions';
 import { SystemMessage } from './SystemMessage/SystemMessage';
 import { Postback } from './MessageRichContent/MessageRichContent.tsx';
-import { EmployeeInfoDialog, EmployeeInfo } from './EmployeeInfo/EmployeeInfoDialog';
+import {
+  EmployeeInfoDialog,
+  EmployeeInfo,
+} from './EmployeeInfo/EmployeeInfoDialog';
 import { CustomField } from './utils/composeMessageData';
 
 type Message = ContentMessage | SystemMessage;
@@ -161,6 +164,7 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
   const handleAgentTypingStartedEvent = useCallback(
     (event: CustomEvent<ChatEventData>) => {
       if (isAgentTypingStartedEvent(event.detail)) {
+        console.log('Agent started typing');
         setAgentTyping(true);
       }
     },
@@ -170,6 +174,7 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
   const handleAgentTypingEndedEvent = useCallback(
     (event: CustomEvent<ChatEventData>) => {
       if (isAgentTypingEndedEvent(event.detail)) {
+        console.log('Agent stopped typing');
         setAgentTyping(false);
       }
     },
@@ -285,14 +290,12 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
   }, [messages.size]);
 
   const handleOptionSelect = async (option: ChatOption) => {
-    // Check if this option requires employee information
     if (option.label === 'Windows Unlock') {
       setPendingOption(option);
       setShowEmployeeDialog(true);
       return;
     }
 
-    // For other options, proceed normally
     handleSendMessage(option.value);
     setShowWelcome(false);
 
@@ -306,7 +309,6 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
   const handleEmployeeInfoSubmit = async (info: EmployeeInfo) => {
     setShowEmployeeDialog(false);
 
-    // Store employee info as custom fields with NICE-expected identifiers
     const customFields: CustomField[] = [
       { ident: 'reason_for_chat', value: pendingOption?.caseName || '' },
       { ident: 'emp_id', value: info.employeeId },
@@ -314,13 +316,11 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
       { ident: 'callback_number', value: info.callbackNumber },
     ];
 
-    // Also set the customer name in the SDK
     localStorage.setItem(STORAGE_CHAT_CUSTOMER_NAME, info.name);
     setCustomerName(info.name);
     sdk.getCustomer()?.setName(info.name);
 
     if (pendingOption) {
-      // Send the initial message with custom fields
       handleSendMessage(pendingOption.value, customFields);
       setShowWelcome(false);
 
@@ -352,50 +352,53 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
       <div className="chat-window">
         <Header onClose={onClose} />
         <div className="chat-content">
-        <div className="chat-messages">
-          {showWelcome ? (
-            <>
-              <div className="message bot">
-                <img
-                  src={`${import.meta.env.BASE_URL}images/simple-icon.svg`}
-                  alt=""
-                />
-                <div className="message-content">
-                  Hello! I'm EDD's virtual assistant. I'd be happy to guide you
-                  on next steps or provide other helpful information! Let's get
-                  started! Which option can I help you with?
+          <div className="chat-messages">
+            {showWelcome ? (
+              <>
+                <div className="message bot">
+                  <img
+                    src={`${import.meta.env.BASE_URL}images/simple-icon.svg`}
+                    alt=""
+                  />
+                  <div className="message-content">
+                    Hello! I'm EDD's virtual assistant. I'd be happy to guide
+                    you on next steps or provide other helpful information!
+                    Let's get started! Which option can I help you with?
+                  </div>
                 </div>
-              </div>
-              <ChatOptions onSelect={handleOptionSelect} />
-            </>
-          ) : (
-            <>
-              <Customer
-                name={customerName}
-                onChange={handleInputCustomerNameChanged}
-              />
-              <MessagesBoard
-                messages={messages}
-                loadMoreMessages={handleLoadMoreMessages}
-                onPostback={handlePostback}
-              />
-              {agentName === null ? null : (
-                <Typography variant="subtitle2" sx={{ padding: '0.5rem 1rem' }}>
-                  You are talking with {agentName}
-                </Typography>
-              )}
-              {agentTyping ? <AgentTyping /> : null}
-            </>
-          )}
+                <ChatOptions onSelect={handleOptionSelect} />
+              </>
+            ) : (
+              <>
+                <Customer
+                  name={customerName}
+                  onChange={handleInputCustomerNameChanged}
+                />
+                <MessagesBoard
+                  messages={messages}
+                  loadMoreMessages={handleLoadMoreMessages}
+                  onPostback={handlePostback}
+                />
+                {agentName === null ? null : (
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ padding: '0.5rem 1rem' }}
+                  >
+                    You are talking with {agentName}
+                  </Typography>
+                )}
+                {agentTyping ? <AgentTyping /> : null}
+              </>
+            )}
+          </div>
+          <SendMessageForm
+            onSubmit={handleSendMessage}
+            onFileUpload={handleFileUpload}
+            onKeyUp={handleMessageKeyUp}
+            disabled={false}
+          />
         </div>
-        <SendMessageForm
-          onSubmit={handleSendMessage}
-          onFileUpload={handleFileUpload}
-          onKeyUp={handleMessageKeyUp}
-          disabled={false}
-        />
       </div>
-    </div>
     </>
   );
 };
