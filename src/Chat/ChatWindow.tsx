@@ -193,7 +193,6 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
   const handleSendMessage = useCallback(
     (messageText: string, customFields?: CustomField[]) => {
       if (customFields && customFields.length > 0) {
-        // Send message with custom fields
         const messageData = {
           thread: {
             idOnExternalPlatform: thread.idOnExternalPlatform,
