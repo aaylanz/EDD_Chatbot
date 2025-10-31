@@ -33,7 +33,7 @@ import {
   EmployeeInfoDialog,
   EmployeeInfo,
 } from './EmployeeInfo/EmployeeInfoDialog';
-import { CustomField } from './utils/composeMessageData';
+import { CustomField, customFieldsArrayToRecord } from './utils/composeMessageData';
 
 type Message = ContentMessage | SystemMessage;
 
@@ -314,12 +314,18 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
       { ident: 'user_name', value: info.name },
       { ident: 'callback_number', value: info.callbackNumber },
     ];
+    const contactCustomFields = customFieldsArrayToRecord(customFields);
 
     localStorage.setItem(STORAGE_CHAT_CUSTOMER_NAME, info.name);
     setCustomerName(info.name);
     sdk.getCustomer()?.setName(info.name);
 
     if (pendingOption) {
+      try {
+        await thread.setCustomFields(contactCustomFields);
+      } catch (error) {
+        console.error('Failed to set contact custom fields', error);
+      }
       handleSendMessage(pendingOption.value, customFields);
       setShowWelcome(false);
 

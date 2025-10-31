@@ -36,7 +36,7 @@ import { Postback } from '../Chat/MessageRichContent/MessageRichContent.tsx';
 import { Header } from '../Chat/Header/Header';
 import { ChatOptions, ChatOption } from '../Chat/Options/ChatOptions';
 import { EmployeeInfoDialog, EmployeeInfo } from '../Chat/EmployeeInfo/EmployeeInfoDialog';
-import { CustomField } from '../Chat/utils/composeMessageData';
+import { CustomField, customFieldsArrayToRecord } from '../Chat/utils/composeMessageData';
 
 type Message = ContentMessage | SystemMessage;
 
@@ -415,6 +415,7 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
       { ident: 'user_name', value: info.name },
       { ident: 'callback_number', value: info.callbackNumber },
     ];
+    const contactCustomFields = customFieldsArrayToRecord(customFields);
 
     // Also set the customer name in the SDK
     localStorage.setItem(STORAGE_CHAT_CUSTOMER_NAME, info.name);
@@ -422,6 +423,11 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
     sdk.getCustomer()?.setName(info.name);
 
     if (pendingOption) {
+      try {
+        await thread.setCustomFields(contactCustomFields);
+      } catch (error) {
+        console.error('Failed to set contact custom fields', error);
+      }
       // Start livechat if needed
       if (livechatStatus === LivechatStatus.NEW) {
         await handleStartLivechat();

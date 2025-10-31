@@ -9,6 +9,17 @@ export interface CustomField {
   value: string;
 }
 
+export function customFieldsArrayToRecord(
+  customFields: CustomField[],
+): Record<string, string> {
+  return customFields.reduce<Record<string, string>>((acc, field) => {
+    if (field.ident) {
+      acc[field.ident] = field.value ?? '';
+    }
+    return acc;
+  }, {});
+}
+
 export function composeSendMessageData(
   messageText: string,
   threadId: ThreadIdOnExternalPlatform,
