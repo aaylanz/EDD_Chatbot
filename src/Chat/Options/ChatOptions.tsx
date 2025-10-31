@@ -14,27 +14,27 @@ const CHAT_OPTIONS: ChatOption[] = [
   {
     label: 'Windows Unlock',
     value: 'Windows Unlock',
-    queueId: 'DEV_Windows_Unlock_Chat', // Maps to CXone skill ID 35606166
+    queueId: 'DEV_Windows_Unlock_Chat',
   },
   {
     label: 'Windows Password Reset',
     value: 'Windows Password Reset',
-    queueId: 'Windows_Password_Reset', // Maps to CXone skill ID 35665540
+    queueId: 'Windows_Password_Reset',
   },
   {
     label: 'Mainframe Account Revoked',
     value: 'Mainframe Account Revoked',
-    queueId: 'Mainframe_Account_Revoked', // Maps to CXone skill ID 35665541
+    queueId: 'Mainframe_Account_Revoked',
   },
   {
     label: 'MFA Support',
     value: 'MFA Support',
-    queueId: 'MFA_Support', // Maps to CXone skill ID 35665543
+    queueId: 'MFA_Support',
   },
   {
     label: 'Report Outage',
     value: 'Report Outage',
-    queueId: 'Report_Outage', // Maps to CXone skill ID 35665544
+    queueId: 'Report_Outage',
   },
 ];
 

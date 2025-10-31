@@ -22,7 +22,6 @@ const chatSdkOptions: ChatSDKOptions = {
   channelId: import.meta.env.REACT_APP_CHANNEL_ID as string,
   customerId:
     localStorage.getItem(STORAGE_CHAT_CUSTOMER_ID) || crypto?.randomUUID(),
-  // use your environment from EnvironmentName enum
   environment: import.meta.env.REACT_APP_ENVIRONMENT,
   customEnvironment:
     import.meta.env.REACT_APP_ENVIRONMENT === 'custom'
@@ -47,7 +46,6 @@ export const Livechat: FC = () => {
   const sdkRef = useRef<ChatSdk>(new ChatSdk(chatSdkOptions));
   const sdk = sdkRef.current;
 
-  // try to load saved customer id and thread id
   useEffect(() => {
     const loadThread = async () => {
       let threadId = localStorage.getItem(getThreadIdStorageKey(sdk.channelId));

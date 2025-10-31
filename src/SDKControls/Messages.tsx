@@ -23,7 +23,6 @@ export const Messages = ({ sdk, threadId }: MessagesProps): JSX.Element => {
   const [messages, setMessages] = useState<Message[]>([]);
 
   const recoverChat = useCallback(async () => {
-    // recover chat
     const thread = sdk.getThread(threadId);
     try {
       const recoverResponse = await thread.recover();

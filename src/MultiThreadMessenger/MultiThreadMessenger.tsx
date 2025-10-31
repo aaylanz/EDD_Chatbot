@@ -15,12 +15,10 @@ import { getThreadIdStorageKey } from '../Chat/utils/getThreadIdStorageKey';
 import { STORAGE_CHAT_CUSTOMER_ID } from '../constants';
 import { MessengerWindow } from '../Messenger/MessengerWindow';
 
-// Initialize Chat SDK with required options
 const chatSdkOptions: ChatSDKOptions = {
   brandId: Number(import.meta.env.REACT_APP_BRAND_ID as string),
   channelId: import.meta.env.REACT_APP_CHANNEL_ID as string,
   customerId: localStorage.getItem(STORAGE_CHAT_CUSTOMER_ID) || '',
-  // use your environment from  EnvironmentName enum
   environment: import.meta.env.REACT_APP_ENVIRONMENT,
   customEnvironment:
     import.meta.env.REACT_APP_ENVIRONMENT === 'custom'
@@ -111,7 +109,6 @@ export const MultiThreadMessenger: FC = () => {
     }
   };
 
-  // try to load saved customer id and thread id
   useEffect(() => {
     handleLoadThreadList();
   }, []);

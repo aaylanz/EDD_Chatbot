@@ -43,7 +43,6 @@ interface LiveChatWindowProps {
   onClose: () => void;
 }
 
-/* prettier-ignore */
 enum LivechatStatus {
   NEW = 'new',
   OPEN = 'open',
@@ -67,7 +66,6 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
     null,
   );
 
-  // Recover thread
   useEffect(() => {
     sdk
       .getCustomer()
@@ -89,7 +87,6 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
         handleRecoverThreadStatus(contact.status);
       } catch (error) {
         if (isLivechat(thread)) {
-          // if thread does not exist in the system show Livechat button
           setLivechatStatus(LivechatStatus.NEW);
           setDisabled(true);
 
@@ -104,7 +101,6 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [thread]);
 
-  // Attach ChatEvent listeners
   useEffect(() => {
     const removeMessageCreatedEventListener = thread.onThreadEvent(
       ChatEvent.MESSAGE_CREATED,
@@ -179,8 +175,6 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
       if (status === ContactStatus.CLOSED) {
         setLivechatStatus(LivechatStatus.CLOSED);
         setDisabled(true);
-
-        // Clear the thread from localStorage so a new one is created next time
         localStorage.removeItem(getThreadIdStorageKey(sdk.channelId));
         console.log('Livechat closed - thread ID cleared from storage');
       }
@@ -281,7 +275,6 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
       thread.keystroke();
 
       const inputFieldContent = event.currentTarget.value;
-      // defer sending message preview to avoid sending too many requests
       if (messagePreviewTimeoutId.current) {
         clearTimeout(messagePreviewTimeoutId.current);
       }
@@ -329,8 +322,6 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
 
         setLivechatStatus(LivechatStatus.CLOSED);
         setDisabled(true);
-
-        // Clear thread from storage
         localStorage.removeItem(getThreadIdStorageKey(sdk.channelId));
         console.log('Livechat session ended and thread cleared');
       } catch (error) {
@@ -348,16 +339,11 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
   );
 
   const handleOptionSelect = async (option: ChatOption) => {
-    // Start livechat if it's in NEW status
     if (livechatStatus === LivechatStatus.NEW) {
       await handleStartLivechat();
     }
-
-    // Send message with routing information
-    // The message content will be used by CXone routing rules to direct to the appropriate queue
     handleSendMessage(option.value);
 
-    // Log for debugging - this helps verify which option was selected
     console.log('Selected option:', {
       label: option.label,
       value: option.value,
@@ -377,7 +363,10 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
           {showWelcome ? (
             <>
               <div className="message bot">
-                <img src={`${import.meta.env.BASE_URL}images/simple-icon.svg`} alt="" />
+                <img
+                  src={`${import.meta.env.BASE_URL}images/simple-icon.svg`}
+                  alt=""
+                />
                 <div className="message-content">
                   Hello! I'm EDD's virtual assistant. I'd be happy to guide you
                   on next steps or provide other helpful information! Let's get
@@ -413,13 +402,15 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
           )}
         </div>
         {livechatStatus === LivechatStatus.OPEN && (
-          <div style={{
-            padding: '0.35rem 0.75rem',
-            borderTop: '1px solid #e9ecef',
-            display: 'flex',
-            justifyContent: 'center',
-            fontSize: '0.85rem'
-          }}>
+          <div
+            style={{
+              padding: '0.35rem 0.75rem',
+              borderTop: '1px solid #e9ecef',
+              display: 'flex',
+              justifyContent: 'center',
+              fontSize: '0.85rem',
+            }}
+          >
             <EndLivechatButton
               sdk={sdk}
               handleEndLivechat={handleEndLivechat}

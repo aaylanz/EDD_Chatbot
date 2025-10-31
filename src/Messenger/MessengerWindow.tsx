@@ -27,7 +27,6 @@ export const MessengerWindow: FC<MessengerWindowProps> = ({
   }, [sdk, threadId]);
 
   const handleClose = () => {
-    // Close handler for messenger - could hide the window or perform cleanup
     console.log('Close clicked');
   };
 

@@ -13,19 +13,16 @@ export const Header: FC<HeaderProps> = ({ onClose }) => {
   };
 
   const handleUnmute = () => {
-    // TODO: Implement unmute functionality
     console.log('Unmute clicked');
     setShowMenu(false);
   };
 
   const handleEndChat = () => {
-    // TODO: Implement end chat functionality
     console.log('End chat clicked');
     setShowMenu(false);
     onClose();
   };
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -49,7 +46,11 @@ export const Header: FC<HeaderProps> = ({ onClose }) => {
           <button className="menu-dots" onClick={toggleMenu}>
             ⋮
           </button>
-          <img src={`${import.meta.env.BASE_URL}images/edd-white.svg`} alt="EDD" className="header-logo" />
+          <img
+            src={`${import.meta.env.BASE_URL}images/edd-white.svg`}
+            alt="EDD"
+            className="header-logo"
+          />
         </div>
         <div className="header-right">
           <button className="lang-selector">

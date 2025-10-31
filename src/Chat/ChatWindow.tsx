@@ -46,7 +46,6 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
   const [agentName, setAgentName] = useState<string | null>(null);
   const [agentTyping, setAgentTyping] = useState<boolean | null>(null);
 
-  // Recover thread
   useEffect(() => {
     sdk
       .getCustomer()
@@ -67,7 +66,6 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
     recover();
   }, [sdk, thread]);
 
-  // Attach ChatEvent listeners
   useEffect(() => {
     const removeMessageCreatedEventListener = thread.onThreadEvent(
       ChatEvent.MESSAGE_CREATED,
@@ -102,7 +100,6 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
     };
   }, []);
 
-  // Mark all messages as read on focus
   useEffect(() => {
     if (windowFocus && messages.size > 0) {
       thread.lastMessageSeen().catch((error) => console.error(error));
@@ -204,7 +201,6 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
       thread.keystroke();
 
       const inputFieldContent = event.currentTarget.value;
-      // defer sending message preview to avoid sending too many requests
       if (messagePreviewTimeoutId.current) {
         clearTimeout(messagePreviewTimeoutId.current);
       }
@@ -245,12 +241,9 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
   }, [messages.size]);
 
   const handleOptionSelect = async (option: ChatOption) => {
-    // Send message with routing information
-    // The message content will be used by CXone routing rules to direct to the appropriate queue
     handleSendMessage(option.value);
     setShowWelcome(false);
 
-    // Log for debugging - this helps verify which option was selected
     console.log('Selected option:', {
       label: option.label,
       value: option.value,
@@ -266,15 +259,14 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
           {showWelcome ? (
             <>
               <div className="message bot">
-                <img src={`${import.meta.env.BASE_URL}images/simple-icon.svg`} alt="" />
+                <img
+                  src={`${import.meta.env.BASE_URL}images/simple-icon.svg`}
+                  alt=""
+                />
                 <div className="message-content">
-                  Hello! I'm EDD's virtual assistant. I'm here to answer general
-                  questions about our services. For your privacy, avoid sharing
-                  personal details like your Social Security number or address.
-                  While I can't check on your benefit claim or payment status,
-                  I'd be happy to guide you on next steps or provide other
-                  helpful information! Let's get started! Which option can I
-                  help you with?
+                  Hello! I'm EDD's virtual assistant. I'd be happy to guide you
+                  on next steps or provide other helpful information! Let's get
+                  started! Which option can I help you with?
                 </div>
               </div>
               <ChatOptions onSelect={handleOptionSelect} />
