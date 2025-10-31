@@ -27,11 +27,6 @@ const CHAT_OPTIONS: ChatOption[] = [
     queueId: 'Mainframe_Account_Revoked',
   },
   {
-    label: 'MFA Support',
-    value: 'MFA Support',
-    queueId: 'MFA_Support',
-  },
-  {
     label: 'Report Outage',
     value: 'Report Outage',
     queueId: 'Report_Outage',
