@@ -45,9 +45,9 @@ export const ThirdPartyOauthChat: FC<ThirdPartyOauthChatProps> = ({
     );
   }
 
-  return (
-    <div className="chat-window">
-      <LivechatWindow sdk={sdk} thread={thread} />
-    </div>
-  );
+  const handleClose = () => {
+    console.log('Close clicked');
+  };
+
+  return <LivechatWindow sdk={sdk} thread={thread} onClose={handleClose} />;
 };

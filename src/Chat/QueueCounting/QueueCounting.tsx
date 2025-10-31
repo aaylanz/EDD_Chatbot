@@ -23,7 +23,7 @@ export function QueueCounting({ sdk }: QueueCountingProps): JSX.Element | null {
     );
 
     return removeListenerCallback;
-  }, [setQueuePosition]);
+  }, [sdk, setQueuePosition]);
 
   if (queuePosition === 0) {
     return null;

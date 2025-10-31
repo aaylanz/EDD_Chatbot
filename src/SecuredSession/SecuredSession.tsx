@@ -73,5 +73,9 @@ export const SecuredSession: FC = () => {
     );
   }
 
-  return <LivechatWindow sdk={sdk} thread={thread} />;
+  const handleClose = () => {
+    console.log('Close clicked');
+  };
+
+  return <LivechatWindow sdk={sdk} thread={thread} onClose={handleClose} />;
 };

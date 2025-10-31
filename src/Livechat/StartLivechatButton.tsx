@@ -1,5 +1,5 @@
 import { ChatSdk } from '@nice-devone/nice-cxone-chat-web-sdk';
-import { Button, Typography } from '@mui/material';
+import { Button } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useCallback, useState } from 'react';
 
@@ -13,29 +13,36 @@ export function StartLivechatButton({
 }: StartLivechatButtonProps): JSX.Element | null {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  if (sdk.isLivechat === false) {
-    return null;
-  }
-
   const onButtonClick = useCallback(async () => {
     setIsLoading(true);
     await handleStartLivechat();
   }, [handleStartLivechat]);
 
+  if (sdk.isLivechat === false) {
+    return null;
+  }
+
   const LoadingIcon = isLoading ? <CircularProgress color="inherit" /> : null;
 
   return (
-    <div className="start-livechat">
-      <Button
-        variant="contained"
-        size="medium"
-        onClick={onButtonClick}
-        startIcon={LoadingIcon}
-      >
-        <Typography padding={1} fontSize={14}>
-          Start Livechat
-        </Typography>
-      </Button>
-    </div>
+    <Button
+      variant="contained"
+      size="small"
+      onClick={onButtonClick}
+      startIcon={LoadingIcon}
+      sx={{
+        backgroundColor: 'var(--edd-blue)',
+        color: 'white',
+        textTransform: 'none',
+        padding: '0.5rem 1rem',
+        fontSize: '0.9rem',
+        borderRadius: '4px',
+        '&:hover': {
+          backgroundColor: '#055580',
+        },
+      }}
+    >
+      Start Livechat
+    </Button>
   );
 }

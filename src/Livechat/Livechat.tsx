@@ -86,15 +86,17 @@ export const Livechat: FC = () => {
     );
   }
 
+  const handleClose = () => {
+    console.log('Close clicked');
+  };
+
   return (
     <div>
       <Alert icon={false} severity="success">
         Livechat
       </Alert>
       <div className="chat-container">
-        <div className="chat-window">
-          <LivechatWindow sdk={sdk} thread={thread} />
-        </div>
+        <LivechatWindow sdk={sdk} thread={thread} onClose={handleClose} />
       </div>
     </div>
   );

@@ -24,6 +24,8 @@ import { Typography } from '@mui/material';
 import { mergeMessages } from '../state/messages/mergeMessages';
 import { STORAGE_CHAT_CUSTOMER_NAME } from '../constants';
 import { AgentTyping } from './Agent/AgentTyping';
+import { Header } from './Header/Header';
+import { ChatOptions, ChatOption } from './Options/ChatOptions';
 import { SystemMessage } from './SystemMessage/SystemMessage';
 import { Postback } from './MessageRichContent/MessageRichContent.tsx';
 
@@ -32,9 +34,10 @@ type Message = ContentMessage | SystemMessage;
 interface ChatWindowProps {
   sdk: ChatSdk;
   thread: Thread | LivechatThread;
+  onClose: () => void;
 }
 
-export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread }) => {
+export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
   const [messages, setMessages] = useState<Map<string, Message>>(new Map());
   const [customerName, setCustomerName] = useState<string>(
     localStorage.getItem(STORAGE_CHAT_CUSTOMER_NAME) ?? '',
@@ -233,26 +236,76 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread }) => {
     [thread],
   );
 
+  const [showWelcome, setShowWelcome] = useState(true);
+
+  useEffect(() => {
+    if (messages.size > 0) {
+      setShowWelcome(false);
+    }
+  }, [messages.size]);
+
+  const handleOptionSelect = async (option: ChatOption) => {
+    // Send message with routing information
+    // The message content will be used by CXone routing rules to direct to the appropriate queue
+    handleSendMessage(option.value);
+    setShowWelcome(false);
+
+    // Log for debugging - this helps verify which option was selected
+    console.log('Selected option:', {
+      label: option.label,
+      value: option.value,
+      queueId: option.queueId,
+    });
+  };
+
   return (
-    <>
-      <Customer name={customerName} onChange={handleInputCustomerNameChanged} />
-      <MessagesBoard
-        messages={messages}
-        loadMoreMessages={handleLoadMoreMessages}
-        onPostback={handlePostback}
-      />
-      {agentName === null ? null : (
-        <Typography variant="subtitle2" gutterBottom>
-          You are talking with {agentName}
-        </Typography>
-      )}
-      {agentTyping ? <AgentTyping /> : null}
-      <SendMessageForm
-        onSubmit={handleSendMessage}
-        onFileUpload={handleFileUpload}
-        onKeyUp={handleMessageKeyUp}
-        disabled={false}
-      />
-    </>
+    <div className="chat-window">
+      <Header onClose={onClose} />
+      <div className="chat-content">
+        <div className="chat-messages">
+          {showWelcome ? (
+            <>
+              <div className="message bot">
+                <img src={`${import.meta.env.BASE_URL}images/simple-icon.svg`} alt="" />
+                <div className="message-content">
+                  Hello! I'm EDD's virtual assistant. I'm here to answer general
+                  questions about our services. For your privacy, avoid sharing
+                  personal details like your Social Security number or address.
+                  While I can't check on your benefit claim or payment status,
+                  I'd be happy to guide you on next steps or provide other
+                  helpful information! Let's get started! Which option can I
+                  help you with?
+                </div>
+              </div>
+              <ChatOptions onSelect={handleOptionSelect} />
+            </>
+          ) : (
+            <>
+              <Customer
+                name={customerName}
+                onChange={handleInputCustomerNameChanged}
+              />
+              <MessagesBoard
+                messages={messages}
+                loadMoreMessages={handleLoadMoreMessages}
+                onPostback={handlePostback}
+              />
+              {agentName === null ? null : (
+                <Typography variant="subtitle2" sx={{ padding: '0.5rem 1rem' }}>
+                  You are talking with {agentName}
+                </Typography>
+              )}
+              {agentTyping ? <AgentTyping /> : null}
+            </>
+          )}
+        </div>
+        <SendMessageForm
+          onSubmit={handleSendMessage}
+          onFileUpload={handleFileUpload}
+          onKeyUp={handleMessageKeyUp}
+          disabled={false}
+        />
+      </div>
+    </div>
   );
 };

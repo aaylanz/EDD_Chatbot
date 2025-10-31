@@ -1,5 +1,4 @@
 import { ChatSdk } from '@nice-devone/nice-cxone-chat-web-sdk';
-import { Button, Typography } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useCallback, useState } from 'react';
 
@@ -13,30 +12,33 @@ export function EndLivechatButton({
 }: EndLivechatButtonProps): JSX.Element | null {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  const onButtonClick = useCallback(async () => {
+    setIsLoading(true);
+    await handleEndLivechat();
+    setIsLoading(false);
+  }, [handleEndLivechat]);
+
   if (sdk.isLivechat === false) {
     return null;
   }
 
-  const onButtonClick = useCallback(async () => {
-    setIsLoading(true);
-    await handleEndLivechat();
-  }, [handleEndLivechat]);
-
-  const LoadingIcon = isLoading ? <CircularProgress color="inherit" /> : null;
-
   return (
-    <div className="start-livechat">
-      <Button
-        variant="contained"
-        size="medium"
-        onClick={onButtonClick}
-        startIcon={LoadingIcon}
-        color="secondary"
-      >
-        <Typography padding={1} fontSize={14}>
-          End Livechat
-        </Typography>
-      </Button>
-    </div>
+    <button
+      onClick={onButtonClick}
+      disabled={isLoading}
+      style={{
+        background: 'none',
+        border: 'none',
+        color: 'var(--edd-blue)',
+        cursor: isLoading ? 'default' : 'pointer',
+        fontSize: '0.85rem',
+        padding: 0,
+        textDecoration: 'underline',
+      }}
+      onMouseEnter={(e) => !isLoading && (e.currentTarget.style.color = '#055580')}
+      onMouseLeave={(e) => !isLoading && (e.currentTarget.style.color = 'var(--edd-blue)')}
+    >
+      {isLoading ? <CircularProgress size={14} /> : 'End Livechat'}
+    </button>
   );
 }

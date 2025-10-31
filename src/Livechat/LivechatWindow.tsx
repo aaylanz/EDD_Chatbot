@@ -25,19 +25,21 @@ import { parseAgentName } from '../Chat/Agent/agentName';
 import { Typography } from '@mui/material';
 import { QueueCounting } from '../Chat/QueueCounting/QueueCounting';
 import { isLivechat } from './isLivechat';
-import { StartLivechatButton } from './StartLivechatButton';
 import { EndLivechatButton } from './EndLivechatButton';
 import { mergeMessages } from '../state/messages/mergeMessages';
 import { STORAGE_CHAT_CUSTOMER_NAME } from '../constants';
 import { AgentTyping } from '../Chat/Agent/AgentTyping';
 import { SystemMessage } from '../Chat/SystemMessage/SystemMessage';
 import { Postback } from '../Chat/MessageRichContent/MessageRichContent.tsx';
+import { Header } from '../Chat/Header/Header';
+import { ChatOptions, ChatOption } from '../Chat/Options/ChatOptions';
 
 type Message = ContentMessage | SystemMessage;
 
 interface LiveChatWindowProps {
   sdk: ChatSdk;
   thread: Thread | LivechatThread;
+  onClose: () => void;
 }
 
 /* prettier-ignore */
@@ -47,7 +49,11 @@ enum LivechatStatus {
   CLOSED = 'closed',
 }
 
-export const LivechatWindow: FC<LiveChatWindowProps> = ({ sdk, thread }) => {
+export const LivechatWindow: FC<LiveChatWindowProps> = ({
+  sdk,
+  thread,
+  onClose,
+}) => {
   const [messages, setMessages] = useState<Map<string, Message>>(new Map());
   const [customerName, setCustomerName] = useState<string>(
     localStorage.getItem(STORAGE_CHAT_CUSTOMER_NAME) ?? '',
@@ -94,6 +100,7 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({ sdk, thread }) => {
     };
 
     recover();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [thread]);
 
   // Attach ChatEvent listeners
@@ -136,7 +143,6 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({ sdk, thread }) => {
     };
   }, []);
 
-  // Mark all messages as read on focus
   useEffect(() => {
     if (windowFocus) {
       thread.lastMessageSeen().catch((error) => console.error(error));
@@ -317,41 +323,92 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({ sdk, thread }) => {
     [thread],
   );
 
+  const handleOptionSelect = async (option: ChatOption) => {
+    // Start livechat if it's in NEW status
+    if (livechatStatus === LivechatStatus.NEW) {
+      await handleStartLivechat();
+    }
+
+    // Send message with routing information
+    // The message content will be used by CXone routing rules to direct to the appropriate queue
+    handleSendMessage(option.value);
+
+    // Log for debugging - this helps verify which option was selected
+    console.log('Selected option:', {
+      label: option.label,
+      value: option.value,
+      queueId: option.queueId,
+    });
+  };
+
+  const showWelcome =
+    livechatStatus === LivechatStatus.NEW && messages.size === 0;
+  const isInputDisabled = disabled || showWelcome;
+
   return (
-    <>
-      <QueueCounting sdk={sdk} />
-      <Customer name={customerName} onChange={handleInputCustomerNameChanged} />
-      <MessagesBoard
-        messages={messages}
-        loadMoreMessages={handleLoadMoreMessages}
-        onPostback={handlePostback}
-      />
-      {agentName === null ? null : (
-        <Typography variant="subtitle2" gutterBottom>
-          You are talking with {agentName}
-        </Typography>
-      )}
-      {livechatStatus === LivechatStatus.NEW ? (
-        <StartLivechatButton
-          sdk={sdk}
-          handleStartLivechat={handleStartLivechat}
+    <div className="chat-window">
+      <Header onClose={onClose} />
+      <div className="chat-content">
+        <div className="chat-messages">
+          {showWelcome ? (
+            <>
+              <div className="message bot">
+                <img src={`${import.meta.env.BASE_URL}images/simple-icon.svg`} alt="" />
+                <div className="message-content">
+                  Hello! I'm EDD's virtual assistant. I'd be happy to guide you
+                  on next steps or provide other helpful information! Let's get
+                  started! Which option can I help you with?
+                </div>
+              </div>
+              <ChatOptions onSelect={handleOptionSelect} />
+            </>
+          ) : (
+            <>
+              <QueueCounting sdk={sdk} />
+              <Customer
+                name={customerName}
+                onChange={handleInputCustomerNameChanged}
+              />
+              <MessagesBoard
+                messages={messages}
+                loadMoreMessages={handleLoadMoreMessages}
+                onPostback={handlePostback}
+              />
+              {agentName === null ? null : (
+                <Typography variant="subtitle2" sx={{ padding: '0.5rem 1rem' }}>
+                  You are talking with {agentName}
+                </Typography>
+              )}
+              {livechatStatus === LivechatStatus.CLOSED ? (
+                <Typography variant="subtitle2" sx={{ padding: '0.5rem 1rem' }}>
+                  Your chat ended.
+                </Typography>
+              ) : null}
+              {agentTyping ? <AgentTyping /> : null}
+            </>
+          )}
+        </div>
+        {livechatStatus === LivechatStatus.OPEN && (
+          <div style={{
+            padding: '0.35rem 0.75rem',
+            borderTop: '1px solid #e9ecef',
+            display: 'flex',
+            justifyContent: 'center',
+            fontSize: '0.85rem'
+          }}>
+            <EndLivechatButton
+              sdk={sdk}
+              handleEndLivechat={handleEndLivechat}
+            />
+          </div>
+        )}
+        <SendMessageForm
+          onSubmit={handleSendMessage}
+          onFileUpload={handleFileUpload}
+          onKeyUp={handleMessageKeyUp}
+          disabled={isInputDisabled}
         />
-      ) : null}
-      {livechatStatus === LivechatStatus.OPEN ? (
-        <EndLivechatButton sdk={sdk} handleEndLivechat={handleEndLivechat} />
-      ) : null}
-      {livechatStatus === LivechatStatus.CLOSED ? (
-        <Typography variant="subtitle2" gutterBottom>
-          Your chat ended.
-        </Typography>
-      ) : null}
-      {agentTyping ? <AgentTyping /> : null}
-      <SendMessageForm
-        onSubmit={handleSendMessage}
-        onFileUpload={handleFileUpload}
-        onKeyUp={handleMessageKeyUp}
-        disabled={disabled}
-      />
-    </>
+      </div>
+    </div>
   );
 };

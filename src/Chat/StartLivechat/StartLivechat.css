@@ -1,0 +1,21 @@
+.start-livechat {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.start-livechat-button {
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.start-livechat-button:hover {
+  background: #1557b0;
+}

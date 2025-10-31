@@ -26,6 +26,11 @@ export const MessengerWindow: FC<MessengerWindowProps> = ({
     loadThread();
   }, [sdk, threadId]);
 
+  const handleClose = () => {
+    // Close handler for messenger - could hide the window or perform cleanup
+    console.log('Close clicked');
+  };
+
   return (
     <div>
       <Alert icon={false} severity="success">
@@ -34,7 +39,7 @@ export const MessengerWindow: FC<MessengerWindowProps> = ({
       {thread ? (
         <div className="chat-container">
           <div className="chat-window">
-            <ChatWindow sdk={sdk} thread={thread} />
+            <ChatWindow sdk={sdk} thread={thread} onClose={handleClose} />
           </div>
         </div>
       ) : null}
