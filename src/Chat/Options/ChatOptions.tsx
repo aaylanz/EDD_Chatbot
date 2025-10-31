@@ -32,9 +32,9 @@ const CHAT_OPTIONS: ChatOption[] = [
     queueId: 'mfa_support',
   },
   {
-    label: 'Outage',
-    value: 'Outage',
-    queueId: 'outage',
+    label: 'Report Outage',
+    value: 'Report Outage',
+    queueId: 'report_outage',
   },
 ];
 
