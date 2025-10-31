@@ -12,13 +12,13 @@ function getAgentName(
     return '';
   }
 
-  const { nickname, firstName, surname } = assigneeData;
+  const { nickname, firstName } = assigneeData;
 
   if (nickname !== null && nickname !== '') {
     return nickname;
   }
 
-  return `${firstName} ${surname}`;
+  return `${firstName}`;
 }
 
 export function getAssignedAgentChangedMessage(
