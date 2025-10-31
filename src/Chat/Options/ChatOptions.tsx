@@ -3,7 +3,7 @@ import { FC } from 'react';
 export interface ChatOption {
   label: string;
   value: string;
-  caseName: string;  // The case name sent to NICE (e.g., "win_unlock")
+  caseName: string;
   queueId?: string;
 }
 
