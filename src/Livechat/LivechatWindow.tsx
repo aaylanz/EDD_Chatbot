@@ -28,6 +28,7 @@ import { isLivechat } from './isLivechat';
 import { EndLivechatButton } from './EndLivechatButton';
 import { mergeMessages } from '../state/messages/mergeMessages';
 import { STORAGE_CHAT_CUSTOMER_NAME } from '../constants';
+import { getThreadIdStorageKey } from '../Chat/utils/getThreadIdStorageKey';
 import { AgentTyping } from '../Chat/Agent/AgentTyping';
 import { SystemMessage } from '../Chat/SystemMessage/SystemMessage';
 import { Postback } from '../Chat/MessageRichContent/MessageRichContent.tsx';
@@ -144,8 +145,11 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
   }, []);
 
   useEffect(() => {
-    if (windowFocus) {
-      thread.lastMessageSeen().catch((error) => console.error(error));
+    if (windowFocus && messages.size > 0) {
+      thread.lastMessageSeen().catch((error) => {
+        console.error('Error marking messages as seen:', error);
+        // Don't let this error break the chat
+      });
     }
   }, [thread, messages, windowFocus]);
 
@@ -175,9 +179,13 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
       if (status === ContactStatus.CLOSED) {
         setLivechatStatus(LivechatStatus.CLOSED);
         setDisabled(true);
+
+        // Clear the thread from localStorage so a new one is created next time
+        localStorage.removeItem(getThreadIdStorageKey(sdk.channelId));
+        console.log('Livechat closed - thread ID cleared from storage');
       }
     },
-    [],
+    [sdk],
   );
 
   const handleAssignedAgentChangeEvent = useCallback(
@@ -299,21 +307,37 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
 
   const handleStartLivechat = useCallback(async () => {
     if (isLivechat(thread)) {
-      await thread.startChat();
+      try {
+        console.log('Starting livechat session...');
+        await thread.startChat();
 
-      setLivechatStatus(LivechatStatus.OPEN);
-      setDisabled(false);
+        setLivechatStatus(LivechatStatus.OPEN);
+        setDisabled(false);
+        console.log('Livechat session started successfully');
+      } catch (error) {
+        console.error('Error starting livechat:', error);
+        alert('Failed to start chat. Please try again.');
+      }
     }
   }, [thread]);
 
   const handleEndLivechat = useCallback(async () => {
     if (isLivechat(thread)) {
-      await thread.endChat();
+      try {
+        console.log('Ending livechat session...');
+        await thread.endChat();
 
-      setLivechatStatus(LivechatStatus.CLOSED);
-      setDisabled(true);
+        setLivechatStatus(LivechatStatus.CLOSED);
+        setDisabled(true);
+
+        // Clear thread from storage
+        localStorage.removeItem(getThreadIdStorageKey(sdk.channelId));
+        console.log('Livechat session ended and thread cleared');
+      } catch (error) {
+        console.error('Error ending livechat:', error);
+      }
     }
-  }, [thread]);
+  }, [thread, sdk]);
 
   const handlePostback = useCallback(
     async (postback: Postback) => {
