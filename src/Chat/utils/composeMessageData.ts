@@ -4,17 +4,25 @@ import {
   ThreadIdOnExternalPlatform,
 } from '@nice-devone/nice-cxone-chat-web-sdk';
 
+export interface CustomField {
+  ident: string;
+  value: string;
+}
 
-export function composeSendMessageData(messageText: string, threadId: ThreadIdOnExternalPlatform): SendMessageEventData {
+export function composeSendMessageData(
+  messageText: string,
+  threadId: ThreadIdOnExternalPlatform,
+  customFields?: CustomField[]
+): SendMessageEventData {
   return {
     thread: {
       idOnExternalPlatform: threadId,
     },
     consumer: {
-      customFields: []
+      customFields: customFields || []
     },
     consumerContact: {
-      customFields: []
+      customFields: customFields || []
     },
     idOnExternalPlatform: `message:${Math.random()}`,
     messageContent: {

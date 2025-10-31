@@ -14,6 +14,7 @@ import {
   isMessageCreatedEvent,
   LivechatThread,
   Message as ContentMessage,
+  MessageType,
   Thread,
 } from '@nice-devone/nice-cxone-chat-web-sdk';
 
@@ -34,6 +35,8 @@ import { SystemMessage } from '../Chat/SystemMessage/SystemMessage';
 import { Postback } from '../Chat/MessageRichContent/MessageRichContent.tsx';
 import { Header } from '../Chat/Header/Header';
 import { ChatOptions, ChatOption } from '../Chat/Options/ChatOptions';
+import { EmployeeInfoDialog, EmployeeInfo } from '../Chat/EmployeeInfo/EmployeeInfoDialog';
+import { CustomField } from '../Chat/utils/composeMessageData';
 
 type Message = ContentMessage | SystemMessage;
 
@@ -65,6 +68,8 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
   const [livechatStatus, setLivechatStatus] = useState<LivechatStatus | null>(
     null,
   );
+  const [showEmployeeDialog, setShowEmployeeDialog] = useState(false);
+  const [pendingOption, setPendingOption] = useState<ChatOption | null>(null);
 
   useEffect(() => {
     sdk
@@ -255,8 +260,47 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
   }, []);
 
   const handleSendMessage = useCallback(
-    (messageText: string) => {
-      thread.sendTextMessage(messageText);
+    (messageText: string, customFields?: CustomField[]) => {
+      if (customFields && customFields.length > 0) {
+        // Send message with custom fields
+        const messageData = {
+          thread: {
+            idOnExternalPlatform: thread.idOnExternalPlatform,
+          },
+          idOnExternalPlatform: `message:${Math.random()}`,
+          messageContent: {
+            type: MessageType.TEXT,
+            payload: {
+              text: messageText,
+              postback: undefined,
+              elements: undefined,
+            },
+          },
+          consumer: {
+            customFields: customFields,
+          },
+          consumerContact: {
+            customFields: customFields,
+          },
+          attachments: [],
+          browserFingerprint: {
+            browser: null,
+            browserVersion: null,
+            country: null,
+            ip: null,
+            language: '',
+            location: null,
+            os: null,
+            osVersion: null,
+            deviceToken: undefined,
+            deviceType: null,
+            applicationType: null,
+          },
+        };
+        thread.sendMessage(messageData);
+      } else {
+        thread.sendTextMessage(messageText);
+      }
     },
     [thread],
   );
@@ -339,6 +383,14 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
   );
 
   const handleOptionSelect = async (option: ChatOption) => {
+    // Check if this option requires employee information
+    if (option.label === 'Windows Unlock') {
+      setPendingOption(option);
+      setShowEmployeeDialog(true);
+      return;
+    }
+
+    // For other options, proceed normally
     if (livechatStatus === LivechatStatus.NEW) {
       await handleStartLivechat();
     }
@@ -351,14 +403,63 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
     });
   };
 
+  const handleEmployeeInfoSubmit = async (info: EmployeeInfo) => {
+    setShowEmployeeDialog(false);
+
+    // Store employee info as custom fields with NICE-expected identifiers
+    const customFields: CustomField[] = [
+      { ident: 'reason_for_chat', value: pendingOption?.caseName || '' },
+      { ident: 'emp_id', value: info.employeeId },
+      { ident: 'user_name', value: info.name },
+      { ident: 'callback_number', value: info.callbackNumber },
+    ];
+
+    // Also set the customer name in the SDK
+    localStorage.setItem(STORAGE_CHAT_CUSTOMER_NAME, info.name);
+    setCustomerName(info.name);
+    sdk.getCustomer()?.setName(info.name);
+
+    if (pendingOption) {
+      // Start livechat if needed
+      if (livechatStatus === LivechatStatus.NEW) {
+        await handleStartLivechat();
+      }
+
+      // Send the initial message with custom fields
+      handleSendMessage(pendingOption.value, customFields);
+
+      console.log('Selected option with employee info:', {
+        label: pendingOption.label,
+        value: pendingOption.value,
+        caseName: pendingOption.caseName,
+        queueId: pendingOption.queueId,
+        employeeInfo: info,
+        customFields: customFields,
+      });
+
+      setPendingOption(null);
+    }
+  };
+
+  const handleEmployeeInfoCancel = () => {
+    setShowEmployeeDialog(false);
+    setPendingOption(null);
+  };
+
   const showWelcome =
     livechatStatus === LivechatStatus.NEW && messages.size === 0;
   const isInputDisabled = disabled || showWelcome;
 
   return (
-    <div className="chat-window">
-      <Header onClose={onClose} />
-      <div className="chat-content">
+    <>
+      <EmployeeInfoDialog
+        open={showEmployeeDialog}
+        onSubmit={handleEmployeeInfoSubmit}
+        onCancel={handleEmployeeInfoCancel}
+      />
+      <div className="chat-window">
+        <Header onClose={onClose} />
+        <div className="chat-content">
         <div className="chat-messages">
           {showWelcome ? (
             <>
@@ -425,5 +526,6 @@ export const LivechatWindow: FC<LiveChatWindowProps> = ({
         />
       </div>
     </div>
+    </>
   );
 };

@@ -2,19 +2,21 @@ import {
   SendMessageEventData,
   ThreadIdOnExternalPlatform,
 } from '@nice-devone/nice-cxone-chat-web-sdk';
+import { CustomField } from './composeMessageData';
 
 export function composeAttachmentsMessageData(
-  threadId: ThreadIdOnExternalPlatform
+  threadId: ThreadIdOnExternalPlatform,
+  customFields?: CustomField[]
 ): Omit<SendMessageEventData, 'attachments' | 'messageContent'> {
   return {
     thread: {
       idOnExternalPlatform: threadId,
     },
     consumer: {
-      customFields: []
+      customFields: customFields || []
     },
     consumerContact: {
-      customFields: []
+      customFields: customFields || []
     },
     idOnExternalPlatform: `message:${Math.random()}`,
     browserFingerprint: {

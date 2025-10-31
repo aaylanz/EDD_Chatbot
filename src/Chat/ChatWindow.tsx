@@ -12,6 +12,7 @@ import {
   isMessageCreatedEvent,
   LivechatThread,
   Message as ContentMessage,
+  MessageType,
   Thread,
 } from '@nice-devone/nice-cxone-chat-web-sdk';
 
@@ -28,6 +29,8 @@ import { Header } from './Header/Header';
 import { ChatOptions, ChatOption } from './Options/ChatOptions';
 import { SystemMessage } from './SystemMessage/SystemMessage';
 import { Postback } from './MessageRichContent/MessageRichContent.tsx';
+import { EmployeeInfoDialog, EmployeeInfo } from './EmployeeInfo/EmployeeInfoDialog';
+import { CustomField } from './utils/composeMessageData';
 
 type Message = ContentMessage | SystemMessage;
 
@@ -45,6 +48,8 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
   const windowFocus = useWindowFocus();
   const [agentName, setAgentName] = useState<string | null>(null);
   const [agentTyping, setAgentTyping] = useState<boolean | null>(null);
+  const [showEmployeeDialog, setShowEmployeeDialog] = useState(false);
+  const [pendingOption, setPendingOption] = useState<ChatOption | null>(null);
 
   useEffect(() => {
     sdk
@@ -181,8 +186,47 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
   );
 
   const handleSendMessage = useCallback(
-    (messageText: string) => {
-      thread.sendTextMessage(messageText);
+    (messageText: string, customFields?: CustomField[]) => {
+      if (customFields && customFields.length > 0) {
+        // Send message with custom fields
+        const messageData = {
+          thread: {
+            idOnExternalPlatform: thread.idOnExternalPlatform,
+          },
+          idOnExternalPlatform: `message:${Math.random()}`,
+          messageContent: {
+            type: MessageType.TEXT,
+            payload: {
+              text: messageText,
+              postback: undefined,
+              elements: undefined,
+            },
+          },
+          consumer: {
+            customFields: customFields,
+          },
+          consumerContact: {
+            customFields: customFields,
+          },
+          attachments: [],
+          browserFingerprint: {
+            browser: null,
+            browserVersion: null,
+            country: null,
+            ip: null,
+            language: '',
+            location: null,
+            os: null,
+            osVersion: null,
+            deviceToken: undefined,
+            deviceType: null,
+            applicationType: null,
+          },
+        };
+        thread.sendMessage(messageData);
+      } else {
+        thread.sendTextMessage(messageText);
+      }
     },
     [thread],
   );
@@ -241,6 +285,14 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
   }, [messages.size]);
 
   const handleOptionSelect = async (option: ChatOption) => {
+    // Check if this option requires employee information
+    if (option.label === 'Windows Unlock') {
+      setPendingOption(option);
+      setShowEmployeeDialog(true);
+      return;
+    }
+
+    // For other options, proceed normally
     handleSendMessage(option.value);
     setShowWelcome(false);
 
@@ -251,10 +303,55 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
     });
   };
 
+  const handleEmployeeInfoSubmit = async (info: EmployeeInfo) => {
+    setShowEmployeeDialog(false);
+
+    // Store employee info as custom fields with NICE-expected identifiers
+    const customFields: CustomField[] = [
+      { ident: 'reason_for_chat', value: pendingOption?.caseName || '' },
+      { ident: 'emp_id', value: info.employeeId },
+      { ident: 'user_name', value: info.name },
+      { ident: 'callback_number', value: info.callbackNumber },
+    ];
+
+    // Also set the customer name in the SDK
+    localStorage.setItem(STORAGE_CHAT_CUSTOMER_NAME, info.name);
+    setCustomerName(info.name);
+    sdk.getCustomer()?.setName(info.name);
+
+    if (pendingOption) {
+      // Send the initial message with custom fields
+      handleSendMessage(pendingOption.value, customFields);
+      setShowWelcome(false);
+
+      console.log('Selected option with employee info:', {
+        label: pendingOption.label,
+        value: pendingOption.value,
+        caseName: pendingOption.caseName,
+        queueId: pendingOption.queueId,
+        employeeInfo: info,
+        customFields: customFields,
+      });
+
+      setPendingOption(null);
+    }
+  };
+
+  const handleEmployeeInfoCancel = () => {
+    setShowEmployeeDialog(false);
+    setPendingOption(null);
+  };
+
   return (
-    <div className="chat-window">
-      <Header onClose={onClose} />
-      <div className="chat-content">
+    <>
+      <EmployeeInfoDialog
+        open={showEmployeeDialog}
+        onSubmit={handleEmployeeInfoSubmit}
+        onCancel={handleEmployeeInfoCancel}
+      />
+      <div className="chat-window">
+        <Header onClose={onClose} />
+        <div className="chat-content">
         <div className="chat-messages">
           {showWelcome ? (
             <>
@@ -299,5 +396,6 @@ export const ChatWindow: FC<ChatWindowProps> = ({ sdk, thread, onClose }) => {
         />
       </div>
     </div>
+    </>
   );
 };
